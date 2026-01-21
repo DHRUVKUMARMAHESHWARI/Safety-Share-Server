@@ -42,7 +42,7 @@ if (config.env === 'development') {
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, // limit each IP to 1000 requests per windowMs
-  messsage: 'Too many requests from this IP, please try again after 15 minutes'
+  message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 app.use(limiter);
 
@@ -92,12 +92,15 @@ import adminRoutes from './routes/adminRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
 
 // Routes
-app.use('/api', healthRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/hazards', hazardRoutes);
-app.use('/api/tracking', trackingRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/community', communityRoutes);
+const apiRouter = express.Router();
+apiRouter.use('/health', healthRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/hazards', hazardRoutes);
+apiRouter.use('/tracking', trackingRoutes);
+apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/community', communityRoutes);
+
+app.use('/api', apiRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Global Error Handler
