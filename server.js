@@ -102,6 +102,7 @@ io.on('connection', (socket) => {
 import adminRoutes from './routes/adminRoutes.js';
 
 import communityRoutes from './routes/communityRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 // Routes
 const apiRouter = express.Router();
@@ -111,6 +112,7 @@ apiRouter.use('/hazards', hazardRoutes);
 apiRouter.use('/tracking', trackingRoutes);
 apiRouter.use('/admin', adminRoutes);
 apiRouter.use('/community', communityRoutes);
+apiRouter.use('/notifications', notificationRoutes);
 
 app.use('/api', apiRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

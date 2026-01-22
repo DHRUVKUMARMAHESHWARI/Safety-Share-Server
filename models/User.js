@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema(
         alertsReceived: { type: Number, default: 0 },
         kmDriven: { type: Number, default: 0 }
     },
+    pushSubscription: {
+        type: Object, // Stores endpoint, keys (p256dh, auth)
+        select: false 
+    },
     googleId: {
       type: String,
       unique: true,
