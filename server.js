@@ -75,6 +75,10 @@ app.use((req, res, next) => {
  next();
 });
 
+// In-memory store for user locations (socketId -> {lat, lng})
+// In production, use Redis.
+export const userLocations = new Map();
+
 io.on('connection', (socket) => {
  console.log('New client connected:', socket.id);
  
@@ -82,7 +86,15 @@ io.on('connection', (socket) => {
    socket.join(`user:${userId}`);
  });
 
+ socket.on('update_location', (coords) => {
+    // coords: { lat, lng }
+    if (coords && coords.lat && coords.lng) {
+        userLocations.set(socket.id, coords);
+    }
+ });
+
  socket.on('disconnect', () => {
+   userLocations.delete(socket.id);
    console.log('Client disconnected:', socket.id);
  });
 });

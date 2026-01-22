@@ -25,6 +25,10 @@ const hazardSchema = new mongoose.Schema(
         required: [true, 'Please provide coordinates [lng, lat]'],
       },
     },
+    bearing: {
+        type: Number, // 0-360 degrees, direction of traffic flow/hazard relevance
+        default: null
+    },
     severity: {
       type: String,
       enum: ['low', 'medium', 'high', 'critical'],
@@ -33,12 +37,16 @@ const hazardSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['pending', 'active', 'resolved', 'expired'],
-      default: 'active', // Assuming auto-active for simplicity, or pending if moderation needed
+      default: 'active', 
     },
     reportedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+    },
+    trustScore: {
+        type: Number,
+        default: 0
     },
     description: {
       type: String,
@@ -76,7 +84,8 @@ const hazardSchema = new mongoose.Schema(
     resolvedAt: Date,
     expiresAt: {
       type: Date,
-      default: () => new Date(+new Date() + 7 * 24 * 60 * 60 * 1000), // Default 7 days from now
+      // Default will be overwritten by controller logic based on type
+      default: () => new Date(+new Date() + 24 * 60 * 60 * 1000), 
     },
   },
   {
@@ -92,10 +101,6 @@ hazardSchema.index({ status: 1, expiresAt: 1 });
 hazardSchema.index({ reportedBy: 1, createdAt: -1 });
 
 // Virtuals
-// Example: Distance calculation would typically happen in aggregation or query,
-// but we can add a helper if needed. For Mongoose virtuals to work with distance,
-// the distance usually needs to be part of the aggregation result.
-// However, we can add a verification score virtual.
 hazardSchema.virtual('verificationScore').get(function () {
   return (this.confirmations?.length || 0) - (this.rejections?.length || 0);
 });
@@ -120,8 +125,9 @@ hazardSchema.methods.isActive = function () {
 hazardSchema.methods.canBeValidated = function (userId) {
   if (!userId) return false;
   
-  // Cannot validate own report
-  if (this.reportedBy.toString() === userId.toString()) return false;
+  // Safe check for reportedBy (whether populated or ObjectId)
+  const reporterId = this.reportedBy._id ? this.reportedBy._id : this.reportedBy;
+  if (reporterId.toString() === userId.toString()) return false;
   
   // Check if already confirmed
   const confirmed = this.confirmations.some(
